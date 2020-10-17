@@ -19,6 +19,14 @@ typedef struct between{
     char* dest;
 }between;
 
+typedef struct cmd_args{
+    char* filepath;
+    char* outfile;
+    int bl;
+    int sl;
+    int discard;
+}cmd;
+
 int main();
 
 void vn_swap();
@@ -56,3 +64,6 @@ int str_int(char* str);
 int pow_jack(int a, int b);
 
 void figure_what_to_write(int value, char* path);
+
+cmd* parse_commandline(int argc, char** argv);
+char* create_bits_arr(char* filepath);

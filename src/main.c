@@ -2,22 +2,19 @@
 
 //#define DEBUG 
 
-extern char bits[];
-extern char acc[];
 
-int bl = 8;
-int sl = 7;
-int discard = 6;
-int total_before_mapping = 256;
-int total_after_mapping = 128;
 
-int main(){
+int main(int argc, char *argv[]){
+    int j;
+    
+    cmd* vals = parse_commandline(argc, argv);
+
+    int count = vals->bl;
+    int bl = vals->bl;
+    int sl = vals->sl;
+    int discard = vals->discard;
     int total_before_mapping = pow_jack(2,bl);
     int total_after_mapping = pow_jack(2,sl);
-    int count = bl;
-    int j;
-    int total_bin_nums = strlen(acc);
-    char* bits = acc;
 
     int list_ints_before[256] = {};
     int list_ints_after[128] = {};
@@ -25,7 +22,12 @@ int main(){
     int ordering_list_before[256] ={};
     int ordering_list_after[128] = {};
 
-    char *path = "../sts-2.1.2/sts-2.1.2/data/acc_after.txt"; 
+    char *path = vals->filepath;
+    char *outfile = vals->outfile; 
+
+    char* bits = create_bits_arr(path);
+    int total_bin_nums = strlen(bits);
+
 
     for(j = 0; j < total_before_mapping; j++){
         list_ints_before[j] = 0;
@@ -198,7 +200,7 @@ int main(){
         }
     }
 
-    write_to_file(bits, path, total_bin_nums);
+    write_to_file(bits, outfile, total_bin_nums);
 
 
 }
@@ -252,5 +254,63 @@ int write_to_file(char* str, char* path, int total_bin_nums){
     }
     fclose(fpw);
     return 0;
+
+}
+
+cmd* parse_commandline(int argc, char** argv){
+
+    cmd* ret = malloc(sizeof(cmd));
+
+    if( argc > 6 ) {
+        printf("Too many arguments supplied.\n");
+        exit(0);
+    }
+    else if (argc < 6){
+        printf("Five arguments expected.\n");
+        exit(0);
+    }
+
+    ret->bl = (int) (argv[1][0] - '0');
+    ret->sl = (int) (argv[2][0] - '0');
+    ret->discard = (int) (argv[3][0] - '0');
+
+    ret->filepath = malloc(strlen(argv[4])+1);
+
+    for(int i = 0; i < strlen(argv[4]); i++){
+        ret->filepath[i] = argv[4][i];
+    }
+    
+    ret->outfile = malloc(strlen(argv[5])+1);
+
+    for(int i = 0; i < strlen(argv[5]); i++){
+        ret->outfile[i] = argv[5][i];
+    }
+
+
+    printf("filepath = %s\n", ret->filepath);
+    printf("outfile = %s\n", ret->outfile);
+    return ret;
+
+}
+
+char* create_bits_arr(char* filepath){
+    FILE* fpw = fopen(filepath, "r");
+    char* bits = malloc(256);
+    int count = 0;
+    int iter = 1;
+    char c = 0;
+    while((c = fgetc(fpw)) != EOF){
+        if(count%256 ==0 && count > 0){
+            iter+=1;
+            bits = realloc(bits, 256*iter);
+            if(bits == NULL){
+                printf("Bad pointer\n");
+                exit(0);
+            }
+        }
+        bits[count] = c;
+        count+=1;
+    }
+    return bits;
 
 }

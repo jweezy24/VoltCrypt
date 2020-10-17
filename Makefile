@@ -29,8 +29,6 @@ SIZE=size
 
 
 OBJS += \
-		simulated_input.o\
-		simulated_input_acc.o\
 		main.o\
 		
 
@@ -47,7 +45,7 @@ $(ODIR)/%.o: $(SDIR)/%.s
 all: bin
 
 bin: $(OBJ)
-	$(CC) $(CFLAGS) $(ODIR)/*  -o VoltCrypt
+	$(CC) $(CFLAGS) $(ODIR)/*  -o VoltCrypt.o
 
 clean:
 	rm  VoltCrypt ./bin/main.o
@@ -55,4 +53,6 @@ clean:
 clean_all:
 	rm -rf VoltCrypt bin/*
 
-
+run:
+	#python3 ./python_scripts/NIST_test_script.py
+	python3 ./python_scripts/create_nist_graphs.py

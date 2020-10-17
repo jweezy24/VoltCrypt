@@ -1,7 +1,17 @@
 import os
+import sys
+import csv
 
-data_types = ['acc', 'bar', 'gry', 'hum', 'lux', ]
 
+
+def parse_csv(path):
+    data = []
+    with open(path, newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=',')
+        for row in spamreader:
+            if row[-1] == '0' or row[-1] == '1':
+                data.append(row[-1])
+    return data
 
 '''
     This function parses a file from the ZIA dataset folder and converts it into a list of numbers in a string format.
@@ -19,7 +29,10 @@ def parse_car_data(filepath):
         for line in f:
             raws = line.split(' ')
             try:
-                data.append(float(raws[1]))
+                if 'acc' in filepath:
+                    data.append(float(raws[1]))
+                else:
+                    data.append(float(raws[0]))
             except Exception as e:
                 print(e)
     return data
@@ -37,7 +50,6 @@ def parse_car_data(filepath):
 def parse_raw_bit_stream(filepath, binary_len):
     data = []
     count = 0
-    total_bits = 1000000
     with open(filepath,"r") as f:
         binary = ''
         bit = ''
@@ -53,9 +65,6 @@ def parse_raw_bit_stream(filepath, binary_len):
             elif '1' in line:
                 bit+='1'
             count+=1
-
-            if count > total_bits:
-                break
 
 
     return data
@@ -147,12 +156,16 @@ def create_nist_test_file(nums, filepath):
 
 
 def main():
-    bit_stream_size = 9
-    block_size = 2
-    data_type = "acc"
-    data = parse_car_data(f"/home/jweezy/Drive2/Drive2/Code/AEP_Prototype/ZIADatasets/CarDataset/Sensor-01/sensors/{data_type}Data")
-    streams = data_to_bit_stream(data, bit_stream_size, block_size)
-    create_nist_test_file(streams, f"../../sts-2.1.2/sts-2.1.2/data/{data_type}_before.txt")
-    create_file(streams, data_type)
+    data_types = ['acc', 'bar', 'gyr', 'hum', 'lux', 'mag', 'tmp']
+    bit_stream_size = int(sys.argv[1])
+    block_size = int(sys.argv[2])
+    for (dirpath, dirnames, filenames) in os.walk("Other/ZIADatasets/csv_files"):
+            for file_ in filenames:
+                if '.csv' in file_ and '_' in file_:
+                    csv_data = parse_csv(f"Other/ZIADatasets/csv_files/{file_}")
+                    new_path = file_.replace('.csv', '_before.txt')
+                    create_nist_test_file(csv_data, f"./Other/sts-2.1.2/sts-2.1.2/data/{new_path}")
+    streams = parse_raw_bit_stream("./bits.log", bit_stream_size)
+    create_nist_test_file(streams, f"./Other/sts-2.1.2/sts-2.1.2/data/raw_before.txt")
 
 main()
