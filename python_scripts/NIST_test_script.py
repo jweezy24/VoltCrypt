@@ -6,7 +6,7 @@ def part1():
     block_size = 2
     discard = 1
     
-    for i in range(8,9):
+    for i in range(2,13):
         os.system(f"python3 ./python_scripts/create_all_object_files.py {i} {block_size}")
         # for data_type in data_types: 
         #     os.system(f"./VoltCrypt.o {i} {i-1} {discard} ./Other/sts-2.1.2/sts-2.1.2/data/{data_type}_before{i}.txt ./Other/sts-2.1.2/sts-2.1.2/data/{data_type}_after{i}.txt")
@@ -47,12 +47,12 @@ def main():
     data_types = ['acc', 'bar', 'gyr', 'hum', 'lux', 'mag', 'tmp']
     command_example = '''python3 -c 'print("0\n./data/acc_after.txt\n1\n0\n100\n0\n")' | ./assess 1080'''
     file_size_example = ''' ./data/acc_after.txt | wc -c'''
-    # try: 
+    # try:  
     #     os.system("rm ./Other/sts-2.1.2/sts-2.1.2/data/* &&  rm ./nist_test_results/*" )
     # except:
     #     print(e)
 
-    #part1()
+    # part1()
     part2()
 
 

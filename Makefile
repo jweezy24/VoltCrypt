@@ -56,3 +56,6 @@ clean_all:
 run:
 	#python3 ./python_scripts/NIST_test_script.py
 	python3 ./python_scripts/create_nist_graphs.py
+
+histogram:
+	python3 ./python_scripts/md5_histogram.py
