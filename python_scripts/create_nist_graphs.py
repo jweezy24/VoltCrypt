@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import subprocess
 import matplotlib.image as mpimg
+import seaborn as sns
+import pandas as pd
 from mpl_toolkits.axes_grid1.inset_locator import InsetPosition
 
 def find_biggest_change(data):
@@ -525,23 +527,110 @@ def quick_shit():
     plt.tight_layout()
     plt.show()
 
+def make_heat_map(dataset, before, data):
+    #print(data)
+    failure_rates = examine_data(data)
+    mappings = []
+    passes = []
+    discards = []
+    arr = [[ 0 for i in range(0,11)] for i in range(0, 7)]
+    print(arr)
+    max_ = 0
+    discard_max = 0
+    mapping_max = 0
 
-def histogram():
-    dataset = "officeSH"
+    for key in data.keys():
+        if dataset in key and '_res' not in key and 'before' not in key:
+            
+            discard = int(key[0])
+            for ele in key.split("_"):
+                if "after" in ele:
+                    ele = ele.replace(".txt",'').replace("after","")
+                    mapping = int(ele)
+                    break
+            
+            if arr[discard-1][mapping-2] == 0:
+                arr[discard-1][mapping-2] = failure_rates[key]
+            else:
+                if arr[discard-1][mapping-2] < failure_rates[key]:
+                    arr[discard-1][mapping-2] = failure_rates[key]
+            if failure_rates[key] > max_:
+                mapping_max = mapping
+                discard_max = discard
+                max_ = failure_rates[key]
 
-    for (dirpath, dirnames, filenames) in os.walk(path):
-         for file_name in filenames:
-             if dataset in file_name and "before" in file_name:
-                 
+    
+    #a = np.random.random((16, 16))
+    sns.heatmap(arr)
+    plt.ylim(0, 7)
+    plt.show()
+    
+    plt.cfg()
+
+def make_bar_comp(dataset, before, data):
+    failure_rates = examine_data(data)
+    mappings = []
+    passes = []
+    discards = []
+    arr = [[],[]]
+    print(arr)
+    max_ = 0
+    min_ = 1
+    discard_max = 0
+    mapping_max = 0
+    discard_min = 0
+    mapping_min = 0
+
+    for key in data.keys():
+        if dataset in key and '_res' not in key and 'before' not in key:
+            
+            discard = int(key[0])
+            for ele in key.split("_"):
+                if "after" in ele:
+                    ele = ele.replace(".txt",'').replace("after","")
+                    mapping = int(ele)
+                    break
+            
+            if failure_rates[key] > max_:
+                mapping_max = mapping
+                discard_max = discard
+                max_ = failure_rates[key]
+            
+            if failure_rates[key] < min_:
+                mapping_min = mapping
+                discard_min = discard
+                min_ = failure_rates[key]
+
+        if before in key:
+            pass_rate = failure_rates[key]
+            arr[0].append(pass_rate)
+            arr[0].append(pass_rate)
+    
+    arr[1].append(max_)
+    arr[1].append(min_)
+
+    X = np.arange(0,2)
+    print(X)
+    plt.bar(X + 0, arr[0], color='red', width=0.25)
+    plt.bar(X + .25, arr[1], color='blue', width=0.25)
+    plt.xticks(ticks=[0.125, 1.125], labels=["Audio Max", "Audio Min"])
+
+    plt.show()
+
+    
 
 
     
 
 if __name__ == '__main__':
     data = parse_files()
-    failure_data = examine_data(data)
+    #failure_data = examine_data(data)
     #create_bar_graph(failure_data)
-    new_figure_6(failure_data)
+    #new_figure_6(failure_data)
+    #make_heat_map("audio_bits_after", "audio_bits_before", data)
+    #make_heat_map("AeroKey_after", "Aero_key_before", data)
+    #make_heat_map("Mobile", "Aero_key_before", data)
+    make_bar_comp("audio_bits_after", "audio_bits_before", data)
     #print(failure_data)
     #get_all_file_sizes()
     #quick_shit()
