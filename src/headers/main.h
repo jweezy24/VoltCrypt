@@ -49,8 +49,6 @@ int fromBinary(char *s);
 
 void clear_str(char* str,int size);
 
-int write_to_file(char* str, char* path, int total_bin_nums);
-
 void make_inital_bit_sequence(int total_bin_nums, bin_number* list_of_binary_seqs, dict* all_numbers, int bl);
 
 void find_highest_half(int total_after_mapping, int total_before_mapping,  dict* all_numbers);
@@ -67,3 +65,14 @@ void figure_what_to_write(int value, char* path);
 
 cmd* parse_commandline(int argc, char** argv);
 char* create_bits_arr(char* filepath);
+
+int bin_to_int(char* bin);
+void apply_discard(char* bits, int len, int bin_len, int discard);
+void print_stream(char* bits, int len);
+
+void form_histogram(char* bits, int len, int bin_len, int* histo_before, int* ordering_list, int histo_len);
+void drop_highest_half(int* histo_before, int len1, int len2);
+void new_mapping(int* histo_before, int len1, int* ordering_list_before, int* ordering_list_after);
+char* int_to_bin(int bin, int size);
+void write_to_file(char* bin, char* path);
+void translate_new_mappings(int* ordering_list, int len, int sl, char* bits, int len2, char* path);

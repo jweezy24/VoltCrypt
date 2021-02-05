@@ -1,4 +1,4 @@
-#include <main.h>
+#include "main.h"
 
 //#define DEBUG 
 
@@ -16,11 +16,11 @@ int main(int argc, char *argv[]){
     int total_before_mapping = pow_jack(2,bl);
     int total_after_mapping = pow_jack(2,sl);
 
-    int list_ints_before[256] = {};
-    int list_ints_after[128] = {};
-    int judges_list[256] = {};
-    int ordering_list_before[256] ={};
-    int ordering_list_after[128] = {};
+    int* list_ints_before = malloc(sizeof(int) * total_before_mapping);
+    int* list_ints_after = malloc(sizeof(int) * total_after_mapping);
+    int* judges_list = malloc(sizeof(int) * total_before_mapping);
+    int* ordering_list_before =malloc(sizeof(int) * total_before_mapping);
+    int* ordering_list_after =malloc(sizeof(int) * total_after_mapping);
 
     char *path = vals->filepath;
     char *outfile = vals->outfile; 
@@ -49,176 +49,43 @@ int main(int argc, char *argv[]){
         ordering_list_after[j] = 0;
     }
 
+    //Testing bin_to_int function
+    //printf("%d\n", bin_to_int("01110111"));
 
-    int number = 0;
-    int current_number = 0;
-    int nxt = 0;
+    //Testing apply discard
+    apply_discard(bits, total_bin_nums, bl, discard);
+    
+    //print_stream(bits, total_bin_nums);
 
-    for(j = 0; j < total_bin_nums; j++){
-        if(count > 0){
-	        if (bits[j] == '1'){
-                number = pow_jack(2, count-1);
-                current_number += number;
-            }
-        count-=1;
-        }else{
-            count = bl;
-            list_ints_before[current_number] += 1;
-            if(ordering_list_before[current_number] == -2){
-                ordering_list_before[current_number] = nxt;
-                nxt+=1;
-            }
-            current_number = 0;
-            number = 0;
-            for(int i = 1; i < discard; i++){
-                j++;
-            }
-        }
-    }
+    form_histogram(bits, total_bin_nums, bl, list_ints_before, ordering_list_before, total_before_mapping);
 
+    //histogram test
+    // for(int i =0; i < total_before_mapping; i++ ){
+    //     printf("%d\t", list_ints_before[i]);
+    // }
+    // printf("\n");
+    //ordering list check
+    // for(int i =0; i < total_before_mapping; i++ ){
+    //     printf("%d\t", ordering_list_before[i]);
+    // }
 
-    int current_check = 0;
-    int  greater_than = 0;
+    // printf("\n");
+    drop_highest_half(list_ints_before, total_before_mapping, total_after_mapping);
+    
+    // for(int i =0; i < total_before_mapping; i++ ){
+    //     printf("%d\t", list_ints_before[i]);
+    // }
 
-    for(int i = 0; i < total_before_mapping; i++){
-        for(int j = 0; j < total_before_mapping; j++){
-            if(list_ints_before[i] > list_ints_before[j]){
-                greater_than += 1; 
-            }
-        }
-        judges_list[i] = greater_than;
-        greater_than = 0;   
-    }
-
-    current_check = 0;
-    greater_than = 0;
-    int dropped = 255;
-    int cont = 1;
-    int tmp_check = 1;
-    //Extracting the highest half of numbers
-    //
-    for(int i = 0; i < total_after_mapping; i++){
-        for(int j = 0; j < total_before_mapping; j++){
-            if(current_check < judges_list[j] && judges_list[j] != -1){
-                current_check = judges_list[j];
-                cont = j;
-            }
-        }
-
-        
-        list_ints_before[cont] = -1;
-        judges_list[cont] = -1;
-        ordering_list_before[cont] = -1;
-        current_check = 0;
-        tmp_check = 1;
-    }
-
-    int iter = 0;
-    current_check = 512;
-    int val = 0;
-    int order_iter=0;
-    int check = 0;
-    tmp_check = 1000000;
-
-    for(int j = 0; j < total_after_mapping; j++){
-        for (int k = 0; k < total_before_mapping; k++){
-            if(ordering_list_before[k] < tmp_check && ordering_list_before[k] != -1){
-                val = k;
-                tmp_check = ordering_list_before[k];
-            }
-        }
-        ordering_list_before[val] = -1;
-        ordering_list_after[order_iter] = val;
-        order_iter+=1;
-        tmp_check = 1000000;
-    }
-
-    for(int i = 0; i < total_after_mapping; i++){
-        for(int k = 0; k < total_after_mapping; k++){
-            if(ordering_list_after[k] == i){
-                list_ints_after[i] = k;
-            }
-        }
-    }
+    // printf("\n");
+    new_mapping(list_ints_before, total_before_mapping, ordering_list_before, ordering_list_after);
 
 
-    int remapped_number = 0;
-    int pos_holder = 0;
-    int mapped =0;  
-    count = bl;
-    current_number = 0;
-    int converter = total_after_mapping;
-    number = 0;
+    // for(int i =0; i < total_after_mapping; i++ ){
+    //     printf("%d\t", ordering_list_after[i]);
+    // }
+    // printf("\n");
 
-    for(int i = 0; i < total_bin_nums;i++){
-        if(count > 0){
-            if (bits[i] == '1'){
-                number = pow_jack(2, count-1);
-                current_number += number;
-            }
-            count-=1;
-        }else{
-            pos_holder = (i) - bl;
-
-            if(list_ints_before[current_number] == -1){
-                mapped = -1;
-            }
-
-            if(list_ints_before[current_number] != -1){
-                mapped = 0;
-            }
-
-            for(int k = 0; k < total_after_mapping && mapped == 0; k++){
-                if(current_number == ordering_list_after[k]){
-                    remapped_number = k;
-                    mapped = 1;
-                }
-            }
-
-            if(mapped == 0 || mapped == -1){
-                for(int j = 0; j < bl; j++) {
-                    bits[pos_holder+j] = 'f';
-                }
-            }else{
-                //converts integer into 8 bit binary sequence within the given list.
-                for(int j = bl-2; j >=0; j--) {
-                    bits[(pos_holder)+j] = (remapped_number & 1) + '0';
-                    remapped_number >>= 1;
-                }
-            }
-            bits[i-1] = 'f';
-            for(int j = 1; j < discard; j++){
-                bits[i] = 'f';
-                i++;
-            }
-            current_number = 0;
-            remapped_number = 0;
-            pos_holder = 0;
-            count = bl;
-            mapped = 0;
-
-        }
-    }
-
-    write_to_file(bits, outfile, total_bin_nums);
-
-
-}
-
-
-
-int str_int(char* str){
-    char c = 0;
-    int tmp_num = 0;
-    int num = 0;
-    int size = strlen(str);
-
-    for (int i =0; i < size; i++){
-        c = str[i];
-        tmp_num = c -'0';
-        num += tmp_num*pow_jack(10, size-(i+1));   
-    }
-    return num;
+    translate_new_mappings(ordering_list_after, total_after_mapping, sl, bits, total_bin_nums, outfile);
 }
 
 int pow_jack(int a, int b){
@@ -232,30 +99,164 @@ int pow_jack(int a, int b){
     return tmp_num;
 }
 
-int write_to_file(char* str, char* path, int total_bin_nums){
-    FILE *fpw;
-    //work path
-    //fpw = fopen("/opt/sts-2.1.2/sts-2.1.2/data/C_gen_file.txt", "a");
-    
-    //laptop
-    fpw = fopen(path, "a");
-    
-    /*Error handling for output file*/
-    if (fpw== NULL)
-    {
-        puts("Issue in opening the Output file");
-        exit(0);
+void apply_discard(char* bits, int len, int bin_len, int discard){
+    int count = 0;
+    if (discard == 0){
+        return;
     }
+    int just_discarded = 0;
+    for (int i =0; i < len;){
+        if(i%bin_len == 0 && i > 0 && just_discarded == 0){
+            for(int j = 0; j < discard; j++){
+                bits[i+j] = -1;
+            }
+            i+=discard;
+            just_discarded = 1;
+            continue;
+        }
+        just_discarded = 0;
+        i+=1;
 
-    for(int i = 0; i < total_bin_nums; i++){
-        if(str[i] != 'f'){
-            fputc(str[i], fpw);
+    }
+}
+
+
+void print_stream(char* bits, int len){
+    for(int i =0; i < len; i++){
+        printf("%c", bits[i]);
+    }
+    printf("\n");
+}
+
+
+void form_histogram(char* bits, int len, int bin_len, int* histo_before, int* ordering_list, int histo_len){
+    char* bin_num = malloc(bin_len+1);
+    int count = 0;
+    int index = 0;
+    for(int i = 0; i < len; i++){
+        if(count%bin_len == 0 && i > 0){
+            bin_num[count] = 0;
+            int num = bin_to_int(bin_num);
+            if(histo_before[num] == 0){
+                ordering_list[index] = num;
+                index+=1;
+            }
+
+            histo_before[num] += 1;
+
+            if(bits[i]!= -1){
+                count = 1;
+                bin_num[0] = bits[i];
+            }else{
+                count = 0;
+            }
+
+        }else{
+            if(bits[i] != -1){
+                bin_num[count] = bits[i];
+                count+=1;
+            }
         }
     }
-    fclose(fpw);
-    return 0;
+    free(bin_num);
+}
+
+void drop_highest_half(int* histo_before, int len1, int len2){
+    int max = 0;
+    int index = 0;
+    for(int i =0; i < len2; i++){
+        max = 0;
+        for(int j =0; j < len1; j++){
+            if(histo_before[j] > max){
+                max = histo_before[j];
+                index = j;
+            }
+        }
+        histo_before[index] = -1;
+        index = 0;
+    }
 
 }
+
+void new_mapping(int* histo_before, int len1, int* ordering_list_before, int* ordering_list_after){
+    int index = 0;
+    int location = 0;
+
+    for(int i = 0; i < len1; i++){
+        index = ordering_list_before[i];
+
+        if(histo_before[index] != -1){
+            ordering_list_after[location] = index;
+            location+=1;
+        }
+    }
+
+}
+
+void translate_new_mappings(int* ordering_list, int len, int sl, char* bits, int len2, char* path){
+    char* bin_num = malloc(sl+1);
+    int count = 0;
+    for(int i = 0; i < len2; i++){
+        if(count%(sl+1) == 0 && i > 0){
+            bin_num[count] = 0;
+            int num = bin_to_int(bin_num);
+            for(int j = 0; j < len; j++){
+                if(ordering_list[j] == num){
+                    char* new_num = int_to_bin(j,sl);
+                    write_to_file(new_num, path);
+                }
+            }
+
+            if(bits[i]!= -1){
+                count = 1;
+                bin_num[0] = bits[i];
+            }else{
+                count = 0;
+            }
+
+        }else{
+            if(bits[i] != -1){
+                bin_num[count] = bits[i];
+                count+=1;
+            }
+        }
+    }
+    free(bin_num);
+
+}
+
+
+int bin_to_int(char* bin){
+    int ret = 0;
+    int len = strlen(bin);
+    for(int i = 0; i < len; i++){
+        if(bin[i] == '1'){
+            ret += pow_jack(2,(len-1)-i);
+        }
+    }
+
+    return ret;
+}
+
+char* int_to_bin(int bin, int size){
+    char* ret = malloc(size+1);
+
+    int count = 0;
+    for(int i = size-1; i >= 0; i--){
+        if(bin >= pow_jack(2,i)){
+            ret[count] = '1';
+            bin -= pow_jack(2,i);
+        }else{
+            ret[count] = '0';
+        }
+        count+=1;
+    }
+    ret[size] = 0;
+
+    return ret;
+
+}
+
 
 cmd* parse_commandline(int argc, char** argv){
 
@@ -312,5 +313,13 @@ char* create_bits_arr(char* filepath){
         count+=1;
     }
     return bits;
+
+}
+
+void write_to_file(char* bin, char* path){
+
+    FILE* fp = fopen(path, "a");
+    fputs(bin, fp);
+    fclose(fp);
 
 }

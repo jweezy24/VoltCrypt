@@ -7,10 +7,10 @@ def part1():
     discard = 1
     
     for i in range(2,13):
-        os.system(f"python3 ./python_scripts/create_all_object_files.py {i} {block_size}")
+        #os.system(f"python3 ./python_scripts/create_all_object_files.py {i} {block_size}")
         # for data_type in data_types: 
         #     os.system(f"./VoltCrypt.o {i} {i-1} {discard} ./Other/sts-2.1.2/sts-2.1.2/data/{data_type}_before{i}.txt ./Other/sts-2.1.2/sts-2.1.2/data/{data_type}_after{i}.txt")
-        for discard in range(0,8):
+        for discard in range(0,13):
             for (dirpath, dirnames, filenames) in os.walk("./Other/sts-2.1.2/sts-2.1.2/data"):
                 for file_ in filenames:
                     if 'before' in file_:
@@ -27,33 +27,40 @@ def part2():
      
     for (dirpath, dirnames, filenames) in os.walk(path):
         for file_ in filenames:
-            if "audio_bits_after" in file_ or "audio_bits_before" in file_ :
-                path2 = f"{path}/{file_}"
-                p1 = Popen(["cat", f"{path2}"], stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt")
-                p2 = Popen(["wc", "-c"], stdin=p1.stdout, stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt" )
-                p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-                output = int(p2.communicate()[0].decode('UTF-8'))
-                bit_stream_len,bits = get_bit_stream_len(output)
-                if bit_stream_len == 0 or bits == 0:
-                    continue
-                print(f"{file_}:\t{output}")
-                
-                p1 = Popen(["echo", f"0\n./data/{file_}\n1\n0\n{bits}\n0\n" ], stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt/Other/sts-2.1.2/sts-2.1.2/")
-                p2 = Popen(["./assess", f"{bit_stream_len}"], stdin=p1.stdout, stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt/Other/sts-2.1.2/sts-2.1.2/" )
-                output = p2.communicate()[0]
-                print(output)
-                os.system(f"cp Other/sts-2.1.2/sts-2.1.2/experiments/AlgorithmTesting/finalAnalysisReport.txt nist_test_results/{file_}")
-            else:
+            #if "audio_bits_after" in file_ or "audio_bits_before" in file_ :
+            path2 = f"{path}/{file_}"
+            p1 = Popen(["cat", f"{path2}"], stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt")
+            p2 = Popen(["wc", "-c"], stdin=p1.stdout, stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt" )
+            p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+            output = int(p2.communicate()[0].decode('UTF-8'))
+            bit_stream_len,bits = get_bit_stream_len(output)
+            if bit_stream_len == 0 or bits == 0:
                 continue
+            print(f"{file_}:\t{output}")
+            
+            p1 = Popen(["echo", f"0\n./data/{file_}\n1\n0\n{bits}\n0\n" ], stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt/Other/sts-2.1.2/sts-2.1.2/")
+            p2 = Popen(["./assess", f"{bit_stream_len}"], stdin=p1.stdout, stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt/Other/sts-2.1.2/sts-2.1.2/" )
+            output = p2.communicate()[0]
+            print(output)
+            os.system(f"cp Other/sts-2.1.2/sts-2.1.2/experiments/AlgorithmTesting/finalAnalysisReport.txt nist_test_results/{file_}")
+           # else:
+           #     continue
 
 def clear_out_old_tests():
-    path = '../nist_test_results'
+    path = 'nist_test_results'
+    path2 = 'Other/sts-2.1.2/sts-2.1.2/data'
 
-     
     for (dirpath, dirnames, filenames) in os.walk(path):
         for file_ in filenames:
                 if "after" in file_ and "before" not in file_:
+                    #print(f"rm {path2}/{file_}")
                     os.system(f"rm {path}/{file_}")
+    
+    for (dirpath, dirnames, filenames) in os.walk(path2):
+        for file_ in filenames:
+                if "after" in file_ and "before" not in file_:
+                    #print(f"rm {path2}/{file_}")
+                    os.system(f"rm {path2}/{file_}")
     
 def get_bit_stream_len(length):
 
@@ -80,8 +87,9 @@ def main():
     #     os.system("rm ./Other/sts-2.1.2/sts-2.1.2/data/* &&  rm ./nist_test_results/*" )
     # except:
     #     print(e)
-    #clear_out_old_tests()
-    #part1()
+    #print("HERE")
+    clear_out_old_tests()
+    part1()
     part2()
 
     #single_test("../Ascii_files/key1.txt")

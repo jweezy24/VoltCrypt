@@ -58,3 +58,5 @@ nist_test_results
 
 __pycache__/
 Ascii_files/NIST.mat
+
+rewrite_/

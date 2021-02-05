@@ -26,12 +26,12 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
 
 def sound_to_binary(data,samplerate,write_file):
 
-    frames = 3000
+    frames = 3000000
     r = samplerate
     m = 30
     t = 5*60
     l = len(data)/t
-    d = int((l/frames))
+    d = int(r*(l/frames))
     bfilter = []
     counter = 0
 
@@ -41,8 +41,10 @@ def sound_to_binary(data,samplerate,write_file):
     for i in range(0, frames-1):
         hanning = []
         f_i = data[(i*d):(i+1)*d]
-        #print(f_i)
-        S_i = np.real(rfft(f_i))
+        if len(f_i) == 0:
+            continue
+        print(f_i)
+        S_i = np.real(fft(f_i))
         hanning = np.hanning(len(S_i))
         S_i = S_i * hanning
 

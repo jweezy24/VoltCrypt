@@ -5,6 +5,8 @@ import subprocess
 import matplotlib.image as mpimg
 import seaborn as sns
 import pandas as pd
+import math
+from scipy.stats import entropy
 from mpl_toolkits.axes_grid1.inset_locator import InsetPosition
 
 def find_biggest_change(data):
@@ -55,6 +57,7 @@ def parse_files():
     data_to_file = {}
     for (dirpath, dirnames, filenames) in os.walk('./nist_test_results'):
         for file_name in filenames:
+            # if "audio" in file_name:
             with open(f'{dirpath}/{file_name}', 'r') as f:
                 all_data = []
                 for line in f:
@@ -78,11 +81,11 @@ def examine_data(data):
         nonoverlapping_fails = 0    
         for ele in data.get(key):
             stars = [i for i, e in enumerate(ele) if '*' in e]
-            if (11 in stars and 13 in stars) and 'NonOverlappingTemplate\n' not in ele[-1]:
+            if (11 in stars and 13 in stars) and 'NonOverlappingTemplate\n' not in ele[-1] and "RandomExcursionsVariant" not in ele[-1]:
                 fails +=1
             elif 'NonOverlappingTemplate\n' in ele[-1] and ( 11 in stars and 13 in stars):
                 nonoverlapping_fails += 1
-            elif 'NonOverlappingTemplate\n' in ele[-1]:
+            elif 'NonOverlappingTemplate\n' in ele[-1] or "RandomExcursionsVariant" in ele[-1] :
                 continue
             else:
                 passes += 1
@@ -96,9 +99,65 @@ def examine_data(data):
             failure_rate[key] = (passes/(passes+fails))
         except:
             failure_rate[key] = "NA"
-    #print(failure_rate)
+    print(failure_rate)
     
     return failure_rate
+
+def entropy_calc(file_,path):
+    #pow_2 = int(file_.split("_")[-1].replace(".txt", "").replace("after", ""))
+    pow_2 = 27
+    print(pow_2)
+    all_pos = 2**pow_2
+    stream_len = 1000
+    posibilities = [ 0 for i in range(0,all_pos)]
+    count = 0
+    total = 0
+    ent_total = 0
+    streams = 0
+    with open(path, 'r') as f:
+        tmp = ''
+        for i in f:
+            for bit in i:
+                if count < pow_2:
+                    tmp+=bit
+                    count+=1
+                    to_calc = False
+                elif count == pow_2:
+                    #print(tmp)
+                    ind = int(tmp,2)
+                    #print(ind)
+                    posibilities[ind] = posibilities[ind]+1
+                    count = 1
+                    tmp = bit
+                    total += 1
+                #print(path)
+                
+                
+        # entropy = 0
+        # print(posibilities)
+        # for count_i in posibilities:
+        #     if count_i == 0:
+        #         continue
+        #     p = count_i/total
+        #     entropy -= p*math.log(p,2)
+        
+        entpy = entropy(posibilities, base=2)
+    
+    return entpy
+                    
+
+def examine_data_entropy(dataset):
+    path = "Other/sts-2.1.2/sts-2.1.2/data"
+    entropy = {}
+    for root, dirs, files in os.walk(path):
+        for file_ in files:
+            #print(f"{file_}")
+            if dataset in file_ and "_res" not in file_ and "before" not in file_:
+                full_path = f"{path}/{file_}"
+                #print(f"{full_path}")
+                entropy[file_] = entropy_calc(file_,full_path)
+    print(entropy)
+    return entropy     
 
 def find_number_in_string(string):
     for letter in string:
@@ -533,7 +592,7 @@ def make_heat_map(dataset, before, data):
     mappings = []
     passes = []
     discards = []
-    arr = [[ 0 for i in range(0,11)] for i in range(0, 7)]
+    arr = [[ 0 for i in range(0,8)] for i in range(0, 11)]
     print(arr)
     max_ = 0
     discard_max = 0
@@ -547,25 +606,67 @@ def make_heat_map(dataset, before, data):
                 if "after" in ele:
                     ele = ele.replace(".txt",'').replace("after","")
                     mapping = int(ele)
+                    check = True
+                    break
+            if discard == 0:
+                print(f"({mapping-2},{discard}) = {failure_rates[key]}")
+
+            if check and mapping-2 <= 7:
+                arr[mapping-2][discard] = failure_rates[key]
+               
+            check = False
+
+    
+    #a = np.random.random((16, 16))
+    sns.heatmap(arr, vmin=0, vmax=1)
+    plt.ylim(0, 8)
+    plt.show()
+    
+    # plt.cfg()
+
+def make_heat_map_entropy(dataset, before, data):
+    #print(data)
+    failure_rates = examine_data_entropy(dataset)
+    print(failure_rates)
+    mappings = []
+    passes = []
+    discards = []
+    arr = [[ 0 for i in range(0,8)] for i in range(0, 8)]
+    print(arr)
+    max_ = 0
+    discard_max = 0
+    mapping_max = 0
+
+    for key in data.keys():
+        if dataset in key and '_res' not in key and 'before' not in key:
+            
+            discard = int(key[0])
+            for ele in key.split("_"):
+                if "after" in ele:
+                    ele = ele.replace(".txt",'').replace("after","")
+                    mapping = int(ele)
+                    check = True
                     break
             
-            if arr[discard-1][mapping-2] == 0:
-                arr[discard-1][mapping-2] = failure_rates[key]
-            else:
-                if arr[discard-1][mapping-2] < failure_rates[key]:
-                    arr[discard-1][mapping-2] = failure_rates[key]
+            if discard == 0:
+                print(f"({mapping-2},{discard}) = {failure_rates[key]}")
+
+            if check and mapping-2 <= 7:
+                arr[mapping-2][discard] = failure_rates[key]
+            
+
             if failure_rates[key] > max_:
                 mapping_max = mapping
                 discard_max = discard
                 max_ = failure_rates[key]
-
+            check = False
     
     #a = np.random.random((16, 16))
     sns.heatmap(arr)
-    plt.ylim(0, 7)
+    plt.ylim(0, 8)
     plt.show()
     
-    plt.cfg()
+    
 
 def make_bar_comp(dataset, before, data):
     failure_rates = examine_data(data)
@@ -624,15 +725,22 @@ def make_bar_comp(dataset, before, data):
 
 if __name__ == '__main__':
     data = parse_files()
+    dataset_after  = "audio_bits_after"
+    dataset_before  = "audio_bits_before"
+    #entropies = examine_data_entropy("audio_bits_after")
     #failure_data = examine_data(data)
     #create_bar_graph(failure_data)
     #new_figure_6(failure_data)
-    #make_heat_map("audio_bits_after", "audio_bits_before", data)
+    make_heat_map(dataset_after, dataset_before, data)
     #make_heat_map("AeroKey_after", "Aero_key_before", data)
     #make_heat_map("Mobile", "Aero_key_before", data)
-    make_bar_comp("audio_bits_after", "audio_bits_before", data)
+    make_bar_comp(dataset_after, dataset_before, data)
+    make_heat_map_entropy(dataset_after, dataset_before, data)
     #print(failure_data)
     #get_all_file_sizes()
     #quick_shit()
 
 #[[0.5000000169615955, 0.5000000169615955, 0.3333333446410637, 0.25000000848079773, 0.20000000678463814, 0.16666667232053178, 0.14285713801097277, 0.1250000042403988], [0.4966800560370406, 0.4966800560370406, 0.33333331071787276, 0.29798110539328193, 0.19999997286144733, 0.21286154361577592, 0.18626420147742961, 0.124999970317208], [0.4948680487947107, 0.4948680487947107, 0.3958271897021134, 0.329975830744174, 0.2827075279190405, 0.24743538132499165, 0.219944841570048, 0.19790965976091135], [0.4924345686949535, 0.4924345686949535, 0.4104196234261208, 0.3517481756701586, 0.3078817243524309, 0.2735897544364664, 0.2462886417795509, 0.22380302784154305], [0.48588206690881264, 0.48588206690881264, 0.4164037082254137, 0.3643189568320272, 0.3238012672279349, 0.29150856056811036, 0.26483048123540387, 0.24293211165519768], [0.4791674461933244, 0.4791674461933244, 0.419354890141612, 0.3728499608814724, 0.3355336028033311, 0.304779855622221, 0.279608135581767, 0.25795862653005885], [0.47382620586173063, 0.47382620586173063, 0.42147905858667367, 0.37909162446932676, 0.3442450782284048, 0.3158155106259477, 0.29141103139425095, 0.2706527184908767], [0.46974697607828175, 0.46974697607828175, 0.4224441394448042, 0.3838100689390478, 0.35209436183337073, 0.3247917565560552, 0.3017233761214456, 0.28174220959857366], [0.10228018459236488, 0.10228018459236488, 0.09294801654325469, 0.08333330223707502, 0.0769231082367916, 0.0730349338645343, 0.06666663500502179, 0.06250022262094035]]
+
+'''{'0audio_bits_after6.txt': 0.5333333333333333, '6audio_bits_after2.txt': 0.6, '2audio_bits_after9.txt': 0.8, '0audio_bits_after2.txt': 0.3333333333333333, '6audio_bits_after6.txt': 0.5333333333333333, '6audio_bits_after9.txt': 0.7333333333333333, '4audio_bits_after2.txt': 0.6, '3audio_bits_after7.txt': 0.4666666666666667, '5audio_bits_after8.txt': 0.8666666666666667, '3audio_bits_after10.txt': 0.6666666666666666, '0audio_bits_after9.txt': 0.6666666666666666, '1audio_bits_after9.txt': 0.6666666666666666, '7audio_bits_after4.txt': 0.6, '0audio_bits_after7.txt': 0.4666666666666667, '5audio_bits_after11.txt': 0.6, '2audio_bits_after10.txt': 0.3333333333333333, '1audio_bits_after11.txt': 0.5333333333333333, '3audio_bits_after6.txt': 0.6, '5audio_bits_after5.txt': 0.6, '7audio_bits_after8.txt': 0.8, '3audio_bits_after3.txt': 0.4, '2audio_bits_after6.txt': 0.5333333333333333, '7audio_bits_after2.txt': 0.4666666666666667, '6audio_bits_after12.txt': 0.6666666666666666, '0audio_bits_after3.txt': 0.6, '1audio_bits_after2.txt': 0.3333333333333333, '4audio_bits_after4.txt': 0.5333333333333333, '2audio_bits_after3.txt': 0.4, '2audio_bits_after12.txt': 0.3333333333333333, '4audio_bits_after6.txt': 0.4666666666666667, '3audio_bits_after8.txt': 0.6666666666666666, '4audio_bits_after7.txt': 0.6, '7audio_bits_after5.txt': 0.5333333333333333, '7audio_bits_after10.txt': 0.6, '2audio_bits_after2.txt': 0.6, '6audio_bits_after5.txt': 0.5333333333333333, '5audio_bits_after7.txt': 0.5333333333333333, '0audio_bits_after4.txt': 0.7333333333333333, '7audio_bits_after11.txt': 0.6, '4audio_bits_after5.txt': 0.5333333333333333, 'audio_bits_before.txt': 0.4782608695652174, '1audio_bits_after12.txt': 0.5333333333333333, '6audio_bits_after4.txt': 0.6, '7audio_bits_after9.txt': 0.6666666666666666, '4audio_bits_after9.txt': 0.8, '2audio_bits_after8.txt': 0.4666666666666667, '3audio_bits_after4.txt': 0.5333333333333333, '0audio_bits_after10.txt': 0.5333333333333333, '0audio_bits_after5.txt': 0.4, '6audio_bits_after10.txt': 0.6666666666666666, '0audio_bits_after11.txt': 0.5333333333333333, '1audio_bits_after5.txt': 0.4, '5audio_bits_after3.txt': 0.4666666666666667, '2audio_bits_after7.txt': 0.4666666666666667, '7audio_bits_after3.txt': 0.4, '5audio_bits_after12.txt': 0.6, '6audio_bits_after8.txt': 0.5333333333333333, '3audio_bits_after2.txt': 0.6, '3audio_bits_after5.txt': 0.8666666666666667, '1audio_bits_after8.txt': 0.6, '4audio_bits_after12.txt': 0.4666666666666667, '0audio_bits_after12.txt': 0.5333333333333333, '1audio_bits_after10.txt': 0.5333333333333333, '6audio_bits_after7.txt': 0.6, '1audio_bits_after6.txt': 0.5333333333333333, '1audio_bits_after4.txt': 0.7333333333333333, '5audio_bits_after6.txt': 0.7333333333333333, '2audio_bits_after5.txt': 0.4666666666666667, '2audio_bits_after11.txt': 0.3333333333333333, '1audio_bits_after3.txt': 0.6, '3audio_bits_after9.txt': 0.5333333333333333, '0audio_bits_after8.txt': 0.6, '7audio_bits_after6.txt': 0.8, '3audio_bits_after11.txt': 0.6666666666666666, '4audio_bits_after10.txt': 0.4666666666666667, '1audio_bits_after7.txt': 0.4666666666666667, '4audio_bits_after8.txt': 0.6666666666666666, '4audio_bits_after3.txt': 0.6, '4audio_bits_after11.txt': 0.4666666666666667, '5audio_bits_after10.txt': 0.6, '2audio_bits_after4.txt': 0.4, '5audio_bits_after4.txt': 0.5333333333333333, '5audio_bits_after2.txt': 0.7333333333333333, '3audio_bits_after12.txt': 0.6666666666666666, '6audio_bits_after3.txt': 0.3333333333333333, '7audio_bits_after12.txt': 0.6, '6audio_bits_after11.txt': 0.6666666666666666, '7audio_bits_after7.txt': 0.8, '5audio_bits_after9.txt': 0.7333333333333333}
+ '''
