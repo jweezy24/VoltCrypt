@@ -105,7 +105,7 @@ def examine_data(data):
 
 def entropy_calc(file_,path):
     #pow_2 = int(file_.split("_")[-1].replace(".txt", "").replace("after", ""))
-    pow_2 = 27
+    pow_2 = 8
     print(pow_2)
     all_pos = 2**pow_2
     stream_len = 1000
@@ -517,82 +517,13 @@ def get_all_file_sizes():
     plt.subplots_adjust(left=0.1, right=1.1, top=1.0, bottom=0.18   )
     plt.savefig("data_retention_color_graph.pdf", bbox_inches='tight')
 
-def quick_shit():
-    y_axis_plot_1_Moon = []
-    for i in range(2, 9):
-        y_axis_plot_1_Moon.append(0)
-    
-    path = '../Other/sts-2.1.2/sts-2.1.2/data'
-    total = 0
-    for (dirpath, dirnames, filenames) in os.walk(path):
-        for file_name in filenames:
-            if 'before' in file_name and 'raw' in file_name:
-                with open(f"{path}/{file_name}") as f:
-                    for line in f:
-                        for bit in line:
-                            total+=1
-    remove = ['10','11', '12']
-    check = True
-    for (dirpath, dirnames, filenames) in os.walk(path):
-        for file_name in filenames:
-            if '2raw' in file_name:
-                check = True
-                for iter in remove:
-                    if iter in file_name:
-                        check = False
-                if check:
-                    index = int(file_name.replace(".txt", '')[-1])
-                    count = 0
-                    if index < 9:
-                        with open(f"{path}/{file_name}") as f:
-                            for line in f:
-                                for bit in line:
-                                    count+=1
-                        print(count/total)
-                        print(index)
-                        y_axis_plot_1_Moon[index-2] = count/total
-    print(y_axis_plot_1_Moon)
-   
-
-    x_axis_plot_2_VN = [ 2,  3,  4,  5,  6,  7,  8]
-    y_axis_plot_2_VN = [0.9074074074074074, 0.9074074074074074, 0.9074074074074074, 0.9074074074074074, 0.9074074074074074, 0.9074074074074074, 0.9074074074074074]
-
-    x_axis_plot_2_Moon = [2, 3, 4, 5, 6, 7, 8]
-    y_axis_plot_2_Moon = [0.7037037037037037, 0.9074074074074074, 0.9148936170212766, 0.9574468085106383, 0.9202127659574468, 0.9946808510638298, 0.9787234042553191 ]
-
-    #FIGURE DATA REMAINING
-    x_axis_plot_1_VN = [2, 3, 4, 5, 6, 7, 8]
-    y_axis_plot_1_VN = [0.16998559824999773, 0.16998559824999773, 0.16998559824999773, 0.16998559824999773, 0.16998559824999773, 0.16998559824999773, 0.16998559824999773]
-
-    x_axis_plot_1_Moon = [2, 3, 4, 5, 6, 7, 8]
-    #y_axis_plot_1_Moon = [0.5000000169615955, 0.5000000169615955, 0.3333333446410636, 0.25000000848079773, 0.20000000678463817, 0.1666666723205318, 0.14285713801097272]
-
-
-    #FIGURE 3 TIME GRAPH
-    x_axis = [2,3,4,5,6,7,8,9,10,11]
-    y_axis = [.340625, .396875, .40625, .43125, .4625, .48125, .53125, .54375, .56875, .6]
-
-
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20,6), constrained_layout=True)
-
-    ax1.plot(x_axis_plot_1_Moon, y_axis_plot_1_Moon, label="Moonshine")
-    ax1.plot(x_axis_plot_1_VN, y_axis_plot_1_VN, label="Von Neumann")
-
-    ax2.plot(x_axis_plot_2_Moon, y_axis_plot_2_Moon, label="Moonshine")
-    ax2.plot(x_axis_plot_2_VN, y_axis_plot_2_VN, label="Von Neumann")
-
-    ax3.plot(x_axis, y_axis)
- 
-    plt.tight_layout()
-    plt.show()
-
 def make_heat_map(dataset, before, data):
     #print(data)
     failure_rates = examine_data(data)
     mappings = []
     passes = []
     discards = []
-    arr = [[ 0 for i in range(0,8)] for i in range(0, 11)]
+    arr = [[ 0 for i in range(0,10)] for i in range(0, 12)]
     print(arr)
     max_ = 0
     discard_max = 0
@@ -611,7 +542,7 @@ def make_heat_map(dataset, before, data):
             if discard == 0:
                 print(f"({mapping-2},{discard}) = {failure_rates[key]}")
 
-            if check and mapping-2 <= 7:
+            if check:
                 arr[mapping-2][discard] = failure_rates[key]
                
             check = False
@@ -619,7 +550,7 @@ def make_heat_map(dataset, before, data):
     
     #a = np.random.random((16, 16))
     sns.heatmap(arr, vmin=0, vmax=1)
-    plt.ylim(0, 8)
+    plt.ylim(0, 11)
     plt.show()
     
     # plt.cfg()
@@ -631,7 +562,7 @@ def make_heat_map_entropy(dataset, before, data):
     mappings = []
     passes = []
     discards = []
-    arr = [[ 0 for i in range(0,8)] for i in range(0, 8)]
+    arr = [[ 0 for i in range(0,10)] for i in range(0, 12)]
     print(arr)
     max_ = 0
     discard_max = 0
@@ -651,7 +582,7 @@ def make_heat_map_entropy(dataset, before, data):
             if discard == 0:
                 print(f"({mapping-2},{discard}) = {failure_rates[key]}")
 
-            if check and mapping-2 <= 7:
+            if check:
                 arr[mapping-2][discard] = failure_rates[key]
             
 
@@ -663,7 +594,7 @@ def make_heat_map_entropy(dataset, before, data):
     
     #a = np.random.random((16, 16))
     sns.heatmap(arr)
-    plt.ylim(0, 8)
+    plt.ylim(0, 11)
     plt.show()
     
     
@@ -718,24 +649,38 @@ def make_bar_comp(dataset, before, data):
 
     plt.show()
 
+
+def bar_graph_comp(data):
+    sets = []
     
+    for s in data.keys():
+        lst = s.split("_")
+        if "10" in lst[0] or "11" in lst[0] or "12" in lst[0]:
+            if lst[0][2:] not in sets and "before" not in s:
+                sets.append(lst[0][2:])
+        else:
+            if lst[0][1:] not in sets and "before" not in s:
+                sets.append(lst[0][1:])
 
-
+    
+            
+    print(sets)
     
 
 if __name__ == '__main__':
     data = parse_files()
-    dataset_after  = "audio_bits_after"
-    dataset_before  = "audio_bits_before"
+    dataset_after  = "officeSH_shrestha_after"
+    dataset_before  = "officeSH_shrestha_before"
+    bar_graph_comp(data)
     #entropies = examine_data_entropy("audio_bits_after")
     #failure_data = examine_data(data)
     #create_bar_graph(failure_data)
     #new_figure_6(failure_data)
-    make_heat_map(dataset_after, dataset_before, data)
+    #make_heat_map(dataset_after, dataset_before, data)
     #make_heat_map("AeroKey_after", "Aero_key_before", data)
     #make_heat_map("Mobile", "Aero_key_before", data)
-    make_bar_comp(dataset_after, dataset_before, data)
-    make_heat_map_entropy(dataset_after, dataset_before, data)
+    #make_bar_comp(dataset_after, dataset_before, data)
+    #make_heat_map_entropy(dataset_after, dataset_before, data)
     #print(failure_data)
     #get_all_file_sizes()
     #quick_shit()

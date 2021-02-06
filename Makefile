@@ -57,5 +57,9 @@ run:
 	python3 ./python_scripts/NIST_test_script.py
 	#python3 ./python_scripts/create_nist_graphs.py
 
+debug:
+	rm ./Other/sts-2.1.2/sts-2.1.2/data/test.txt
+	gdb --args ./VoltCrypt.o 10 9 8 ./Other/sts-2.1.2/sts-2.1.2/data/audio_bits_before.txt ./Other/sts-2.1.2/sts-2.1.2/data/test.txt
+
 histogram:
 	python3 ./python_scripts/md5_histogram.py

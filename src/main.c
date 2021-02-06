@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
     }
 
     for(j = 0; j < total_before_mapping; j++){
-        judges_list[j] = 0;
+        judges_list[j] = -1;
     }
 
     for(j = 0; j < total_before_mapping; j++){
@@ -60,6 +60,7 @@ int main(int argc, char *argv[]){
     form_histogram(bits, total_bin_nums, bl, list_ints_before, ordering_list_before, total_before_mapping);
 
     //histogram test
+    // printf("TOTAL BEFORE MAPPING = %d\n", list_ints_before);
     // for(int i =0; i < total_before_mapping; i++ ){
     //     printf("%d\t", list_ints_before[i]);
     // }
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]){
     // }
 
     // printf("\n");
-    new_mapping(list_ints_before, total_before_mapping, ordering_list_before, ordering_list_after);
+    new_mapping(list_ints_before, total_before_mapping, ordering_list_before, ordering_list_after, judges_list);
 
 
     // for(int i =0; i < total_after_mapping; i++ ){
@@ -85,16 +86,18 @@ int main(int argc, char *argv[]){
     // }
     // printf("\n");
 
-    translate_new_mappings(ordering_list_after, total_after_mapping, sl, bits, total_bin_nums, outfile);
+    translate_new_mappings(judges_list, total_after_mapping, sl, bits, total_bin_nums, outfile);
 }
 
-int pow_jack(int a, int b){
-    int tmp_num = 1;
+long pow_jack(int a, int b){
+    long tmp_num = 1;
     if (b == 0){
         return 1;
     }
     for(int i = 0; i < b; i++){
+        
         tmp_num = tmp_num*a;
+        //printf("tmp_num = %d\n", tmp_num);
     }
     return tmp_num;
 }
@@ -178,7 +181,7 @@ void drop_highest_half(int* histo_before, int len1, int len2){
 
 }
 
-void new_mapping(int* histo_before, int len1, int* ordering_list_before, int* ordering_list_after){
+void new_mapping(int* histo_before, int len1, int* ordering_list_before, int* ordering_list_after, int* judges_list){
     int index = 0;
     int location = 0;
 
@@ -187,25 +190,30 @@ void new_mapping(int* histo_before, int len1, int* ordering_list_before, int* or
 
         if(histo_before[index] != -1){
             ordering_list_after[location] = index;
+            judges_list[index] = (location+i)%((int)(len1/2));
             location+=1;
         }
     }
 
 }
 
-void translate_new_mappings(int* ordering_list, int len, int sl, char* bits, int len2, char* path){
+void translate_new_mappings(int* judges_list, int len, int sl, char* bits, int len2, char* path){
     char* bin_num = malloc(sl+1);
     int count = 0;
     for(int i = 0; i < len2; i++){
         if(count%(sl+1) == 0 && i > 0){
             bin_num[count] = 0;
             int num = bin_to_int(bin_num);
-            for(int j = 0; j < len; j++){
-                if(ordering_list[j] == num){
-                    char* new_num = int_to_bin(j,sl);
-                    write_to_file(new_num, path);
-                }
+            
+            
+            int ind = judges_list[num];
+            if(ind != -1){
+                char* new_num = int_to_bin(ind,sl);
+                write_to_file(new_num, path);
+                free(new_num);
             }
+                
+            
 
             if(bits[i]!= -1){
                 count = 1;
@@ -226,8 +234,8 @@ void translate_new_mappings(int* ordering_list, int len, int sl, char* bits, int
 }
 
 
-int bin_to_int(char* bin){
-    int ret = 0;
+long bin_to_int(char* bin){
+    long ret = 0;
     int len = strlen(bin);
     for(int i = 0; i < len; i++){
         if(bin[i] == '1'){
@@ -257,6 +265,33 @@ char* int_to_bin(int bin, int size){
 
 }
 
+int str_to_int(char* number){
+    int count = 0;
+    int ret = 0;
+
+    printf("NUMBER = %s\n", number);
+
+    while(number[count] != 0){
+        count+=1;    
+    }
+
+    int* holder = malloc((count+1) * sizeof(int));
+
+    for(int i =0; i < count; i++){
+        holder[i] = number[i]- '0';
+    }
+
+
+    for (int i =0; i < count; i++){
+        ret += pow_jack(10, (count)-(i+1)) * holder[i];
+       
+    }
+    
+
+    return ret;
+
+}
+
 
 cmd* parse_commandline(int argc, char** argv){
 
@@ -271,9 +306,9 @@ cmd* parse_commandline(int argc, char** argv){
         exit(0);
     }
 
-    ret->bl = (int) (argv[1][0] - '0');
-    ret->sl = (int) (argv[2][0] - '0');
-    ret->discard = (int) (argv[3][0] - '0');
+    ret->bl = (int) (str_to_int(argv[1]));
+    ret->sl = (int) (str_to_int(argv[2]));
+    ret->discard = (int) (str_to_int(argv[3]));
 
     ret->filepath = malloc(strlen(argv[4])+1);
 

@@ -27,7 +27,7 @@ def part2():
      
     for (dirpath, dirnames, filenames) in os.walk(path):
         for file_ in filenames:
-            #if "audio_bits_after" in file_ or "audio_bits_before" in file_ :
+            # if "audio_bits_after" in file_ or "audio_bits_before" in file_ :
             path2 = f"{path}/{file_}"
             p1 = Popen(["cat", f"{path2}"], stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt")
             p2 = Popen(["wc", "-c"], stdin=p1.stdout, stdout=PIPE,cwd="/home/jweezy/Drive2/Drive2/Code/VoltCrypt" )
@@ -53,13 +53,13 @@ def clear_out_old_tests():
     for (dirpath, dirnames, filenames) in os.walk(path):
         for file_ in filenames:
                 if "after" in file_ and "before" not in file_:
-                    #print(f"rm {path2}/{file_}")
+                    print(f"rm {path2}/{file_}")
                     os.system(f"rm {path}/{file_}")
     
     for (dirpath, dirnames, filenames) in os.walk(path2):
         for file_ in filenames:
                 if "after" in file_ and "before" not in file_:
-                    #print(f"rm {path2}/{file_}")
+                    print(f"rm {path2}/{file_}")
                     os.system(f"rm {path2}/{file_}")
     
 def get_bit_stream_len(length):
