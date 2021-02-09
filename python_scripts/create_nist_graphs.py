@@ -99,7 +99,7 @@ def examine_data(data):
             failure_rate[key] = (passes/(passes+fails))
         except:
             failure_rate[key] = "NA"
-    print(failure_rate)
+    #print(failure_rate)
     
     return failure_rate
 
@@ -652,26 +652,114 @@ def make_bar_comp(dataset, before, data):
 
 def bar_graph_comp(data):
     sets = []
-    
+    passing_rates = examine_data(data)
     for s in data.keys():
         lst = s.split("_")
         if "10" in lst[0] or "11" in lst[0] or "12" in lst[0]:
             if lst[0][2:] not in sets and "before" not in s:
                 sets.append(lst[0][2:])
+                print(lst)
         else:
             if lst[0][1:] not in sets and "before" not in s:
                 sets.append(lst[0][1:])
 
+    data_1 = [[0 for i in range(0,len(sets))],[0 for i in range(0,len(sets))]]
+
+
+    for s in range(0,len(sets)):
+        for k in data.keys():
+            if sets[s] in k:
+                data_1[0][s] = max(data_1[0][s], passing_rates[k])
+            if "before" in k and sets[s] in k:
+                data_1[1][s] = passing_rates[k]
+    
+    print(data_1)
+            
+    X = np.arange(0,len(sets))
+    distance = 1/len(sets)
+    print(distance)
+    plt.bar(X + 0, data_1[0], color='red', width=0.25, label="Moonshone")
+    plt.bar(X + .25, data_1[1], color='blue', width=0.25,label="No Moonshine")
+    plt.xticks(ticks= (X + distance), labels=sets)
+    plt.legend()
+    plt.xlabel("Datasets")
+    plt.ylabel("NIST Pass Rate")
+
+    plt.show()
+
+
     
             
     print(sets)
+
+
+def heatmap_comp(data):
+    sets = []
+    passing_rates = examine_data(data)
+    for s in data.keys():
+        lst = s.split("_")
+        if "10" in lst[0] or "11" in lst[0] or "12" in lst[0]:
+            if lst[0][2:] not in sets and "before" not in s:
+                sets.append(lst[0][2:])
+                print(lst)
+        else:
+            if lst[0][1:] not in sets and "before" not in s:
+                sets.append(lst[0][1:])
+
+    heats = [[ [0 for i in range(0,10)] for i in range(0,11) ]  for i in range(0, len(sets))]
     
+    mapping = 0
+    discard = 0
+    for s in range(0,len(sets)):
+        for k in data.keys():
+            if sets[s] in k and "before" not in k:
+                print(k)
+                discard = int(k[0])
+                for ele in k.split("_"):
+                    if "after" in ele:
+                        ele = ele.replace(".txt",'').replace("after","")
+                        mapping = int(ele)
+                        check = True
+                        break
+                heats[s][mapping-2][discard] = passing_rates[k]
+    
+    print(heats)
+    
+    fig, axs = plt.subplots(ncols=len(sets))
+    print(axs)
+
+    for i in range(0, len(sets)):
+      
+        sns.heatmap(heats[i], ax=axs[i], cbar=False, vmin=0, vmax=1)
+     
+
+        axs[i].title.set_text(sets[i])
+        axs[i].set( aspect='equal')
+        axs[i].set_ylim([0,11])
+    # X = np.arange(0,len(sets))
+    # distance = 1/len(sets)
+    # print(distance)
+    # plt.bar(X + 0, data_1[0], color='red', width=0.25, label="Moonshone")
+    # plt.bar(X + .25, data_1[1], color='blue', width=0.25,label="No Moonshine")
+    # plt.xticks(ticks= (X + distance), labels=sets)
+    # plt.legend()
+    # plt.xlabel("Datasets")
+    # plt.ylabel("NIST Pass Rate")
+    plt.ylim(0, 11)
+    plt.show()
+
+
+    
+            
+    print(sets)
+ 
 
 if __name__ == '__main__':
     data = parse_files()
     dataset_after  = "officeSH_shrestha_after"
     dataset_before  = "officeSH_shrestha_before"
-    bar_graph_comp(data)
+    #bar_graph_comp(data)
+    heatmap_comp(data)
     #entropies = examine_data_entropy("audio_bits_after")
     #failure_data = examine_data(data)
     #create_bar_graph(failure_data)
